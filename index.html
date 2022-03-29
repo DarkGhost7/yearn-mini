@@ -23,6 +23,15 @@
     const registryAdapterAddress = '0x240315db938d44bb124ae619f5Fd0269A02d1271';
     const balancesHelperAddress = '0x855ffe28019106d089bC018Df18838f8d241c402';
     let account, registryAdapterContract, balancesHelperContract, assets, assetsStatic, assetsDynamic, assestsPositionsOf, tokensMetadata, tokensBalances, tokens;
+    const compareValue = ( a, b ) => {
+      if ( a.valueRaw > b.valueRaw ){
+        return -1;
+      }
+      if ( a.valueRaw < b.valueRaw ){
+        return 1;
+      }
+      return 0;
+    }
     const findAssetByUnderlyingTokenId = tokenId => assets.find(asset => asset.tokenId === tokenId);
     const findToken = id => tokens.find(token => token.id === id);
     const loadChunkedData = async (contract, addresses, chunkSize, method, args) => {
@@ -51,7 +60,15 @@
       const positionsRows = assestsPositionsOf.reduce((acc, position) => acc += `<tr><td>${findToken(position.tokenId).symbol}</td><td>${formatTokenAmount(position.underlyingTokenBalance.amount / 10**findToken(position.tokenId).decimals)}</td><td>${formatCurrency(position.underlyingTokenBalance.amountUsdc / 10**6)}</td><td><button onClick="withdraw('${position.assetId}')">withdraw</button></td></tr>`, '');
       const positionsEls = `<h2>Your Deposits</h2><table><thead><th>Name</th><th>Tokens</th><th>Value</th><th></th></thead><tbody>${positionsRows}</tbody></table>`;
       if (positionsRows) document.getElementById('deposits').setAttribute('style', 'display: inherit');
-      const assetsEls = assets.reduce((acc, asset) => acc += `<tr><td>${findToken(asset.tokenId).symbol}</td><td>${formatTokenAmount(asset.underlyingTokenBalance.amount / 10**findToken(asset.tokenId).decimals)}</td><td>${formatCurrency(asset.underlyingTokenBalance.amountUsdc / 10**6)}</td></tr>`, '');
+      const assetsElsData = assets.reduce((acc, asset) => acc.concat({
+        name: findToken(asset.tokenId).symbol,
+        tokens: formatTokenAmount(asset.underlyingTokenBalance.amount / 10**findToken(asset.tokenId).decimals),
+        value: formatCurrency(asset.underlyingTokenBalance.amountUsdc / 10**6),
+        valueRaw: asset.underlyingTokenBalance.amountUsdc / 10**6,
+      }), []);
+
+      assetsElsData.sort(compareValue);
+      const assetsEls = assetsElsData.map((asset) => `<tr><td>${asset.name}</td><td>${asset.tokens}</td><td>${asset.value}</td></tr>`).join('');
       document.getElementById('walletRows').innerHTML = walletEls;
       document.getElementById('deposits').innerHTML = positionsEls;
       document.getElementById('assetsRows').innerHTML = assetsEls;
