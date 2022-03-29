@@ -8,6 +8,15 @@
   </head>
   <body>
     <script>
+    const alchemyKey = '';      // Your Alchemy Key 
+    // OR
+    const infuraProjectId = ''; // Your Infura Project ID - DO NOT USE, WON'T WORK
+
+    const alchemyUrl = alchemyKey != ''?('https://eth-mainnet.alchemyapi.io/v2/' + alchemyKey):null;
+    const infuraUrl = infuraProjectId != ''?('https://mainnet.infura.io/v3/' + infuraProjectId):null;
+
+    const web3 = new Web3(alchemyUrl || infuraUrl || Web3.givenProvider);
+    
     const registryAdapterAbi = [{"inputs":[{"internalType":"address[]","name":"_assetsAddresses","type":"address[]"}],"name":"assetsStatic","outputs":[{"components":[{"internalType":"address","name":"id","type":"address"},{"internalType":"string","name":"typeId","type":"string"},{"internalType":"address","name":"tokenId","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"version","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"internalType":"struct RegisteryAdapterV2Vaults.AssetStatic[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"assetsAddresses","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"assetsTokensAddresses","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"_assetsAddresses","type":"address[]"}],"name":"assetsDynamic","outputs":[{"components":[{"internalType":"address","name":"id","type":"address"},{"internalType":"string","name":"typeId","type":"string"},{"internalType":"address","name":"tokenId","type":"address"},{"components":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"amountUsdc","type":"uint256"}],"internalType":"struct RegisteryAdapterV2Vaults.TokenAmount","name":"underlyingTokenBalance","type":"tuple"},{"components":[{"internalType":"uint256","name":"pricePerShare","type":"uint256"},{"internalType":"bool","name":"migrationAvailable","type":"bool"},{"internalType":"address","name":"latestVaultAddress","type":"address"},{"internalType":"uint256","name":"depositLimit","type":"uint256"},{"internalType":"bool","name":"emergencyShutdown","type":"bool"}],"internalType":"struct RegisteryAdapterV2Vaults.AssetMetadata","name":"metadata","type":"tuple"}],"internalType":"struct RegisteryAdapterV2Vaults.AssetDynamic[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"accountAddress","type":"address"},{"internalType":"address[]","name":"_assetsAddresses","type":"address[]"}],"name":"assetsPositionsOf","outputs":[{"components":[{"internalType":"address","name":"assetId","type":"address"},{"internalType":"address","name":"tokenId","type":"address"},{"internalType":"string","name":"typeId","type":"string"},{"internalType":"uint256","name":"balance","type":"uint256"},{"components":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"amountUsdc","type":"uint256"}],"internalType":"struct RegisteryAdapterV2Vaults.TokenAmount","name":"underlyingTokenBalance","type":"tuple"},{"components":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct RegisteryAdapterV2Vaults.Allowance[]","name":"tokenAllowances","type":"tuple[]"},{"components":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct RegisteryAdapterV2Vaults.Allowance[]","name":"assetAllowances","type":"tuple[]"}],"internalType":"struct RegisteryAdapterV2Vaults.Position[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}];
     const balancesHelperAbi = [{"inputs":[{"internalType":"address","name":"accountAddress","type":"address"},{"internalType":"address[]","name":"tokensAddresses","type":"address[]"}],"name":"tokensBalances","outputs":[{"components":[{"internalType":"address","name":"tokenId","type":"address"},{"internalType":"uint256","name":"priceUsdc","type":"uint256"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"balanceUsdc","type":"uint256"}],"internalType":"struct BalancesHelper.TokenBalance[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"tokensAddresses","type":"address[]"}],"name":"tokensMetadata","outputs":[{"components":[{"internalType":"address","name":"id","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"internalType":"struct TokenMetadata[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}];
     const vaultAbi = [{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"deposit","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_shares","type":"uint256"}],"name":"withdraw","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
@@ -75,19 +84,25 @@
       await vaultContract.methods.withdraw(amount).send({from: account,gas: gasLimit});
       loadData();
     }
-    window.onload = (function() {
+    window.onload = async () => {
       if (window.ethereum) {
-        window.web3 = new Web3(ethereum);
-        ethereum.enable().then(() => {
-          web3.eth.getAccounts().then((wallet) => {
-            account = wallet[0];
-            registryAdapterContract = new web3.eth.Contract(registryAdapterAbi, registryAdapterAddress);
-            balancesHelperContract = new web3.eth.Contract(balancesHelperAbi, balancesHelperAddress);
-            loadData();
-          });
-        });
+        try {
+          window.ethereum.request({ method: 'eth_requestAccounts' }).then(
+            function(wallets) {
+              account = wallets[0];
+              registryAdapterContract = new web3.eth.Contract(registryAdapterAbi, registryAdapterAddress);
+              balancesHelperContract = new web3.eth.Contract(balancesHelperAbi, balancesHelperAddress);
+              loadData();
+            }
+          );
+          
+        } catch (error) {
+          if (error.code === 4001) {
+            alert('rejected');// User rejected request
+          }
+        }
       } else alert('No web3 support :(\r\n\r\nTry running this file using: python -m http.server 8080');
-    });
+    };
     </script>
     <div class="header">yearn-mini</div>
       <h2>Your Wallet</h2>
