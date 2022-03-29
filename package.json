@@ -1,0 +1,11 @@
+{
+  "name": "yearn-mini",
+  "description": "A barebones vanillajs/jQuery user interface for Yearn vaults",
+  "main": "bignumber.min.js",
+  "scripts": {
+    "start": "http-server -p 3000 -o ./index.html"
+  },
+  "dependencies": {
+    "http-server": "^14.1.0"
+  }
+}
